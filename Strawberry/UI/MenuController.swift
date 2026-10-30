@@ -31,7 +31,9 @@ final class MenuController: NSObject, NSMenuDelegate {
 
     // MARK: status-bar button
 
-    private var appliedTitle: String?
+    /// `.none` until the first refresh, so the idle state (`.some(nil)`) still
+    /// gets its icon applied at launch.
+    private var appliedTitle: String?? = .none
 
     @objc private func refreshButton() {
         guard let button = statusItem.button else { return }
