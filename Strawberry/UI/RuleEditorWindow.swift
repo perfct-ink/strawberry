@@ -260,6 +260,8 @@ struct RuleEditorView: View {
                 TextField("/Volumes/…", text: binding)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(.body, design: .monospaced))
+                    // The sandbox only grants access to folders picked in the panel.
+                    .disabled(SandboxAccess.isSandboxed)
                 Button("Choose…") {
                     if let picked = PanelHelper.chooseDirectory(
                         title: title,

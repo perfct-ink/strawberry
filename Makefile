@@ -5,7 +5,7 @@ BUILD_DIR := build
 APP := $(BUILD_DIR)/Build/Products/$(CONFIGURATION)/$(SCHEME).app
 RELEASE_APP := $(BUILD_DIR)/Build/Products/Release/$(SCHEME).app
 
-.PHONY: dev build test open publish install clean
+.PHONY: dev build test open publish install appstore clean
 
 dev: build open
 
@@ -54,6 +54,25 @@ install: publish
 	rm -rf "/Applications/$(SCHEME).app"
 	ditto "$(RELEASE_APP)" "/Applications/$(SCHEME).app"
 	@echo "Installed /Applications/$(SCHEME).app"
+
+# Sandboxed App Store build: archive, then export a signed package for
+# App Store Connect into build/AppStore/. Upload it with Xcode's Organizer or
+# Transporter. Bump CURRENT_PROJECT_VERSION before each upload.
+appstore:
+	xcodebuild \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-configuration AppStore \
+		-derivedDataPath $(BUILD_DIR) \
+		-archivePath $(BUILD_DIR)/$(SCHEME)-AppStore.xcarchive \
+		-allowProvisioningUpdates \
+		archive
+	xcodebuild \
+		-exportArchive \
+		-archivePath $(BUILD_DIR)/$(SCHEME)-AppStore.xcarchive \
+		-exportOptionsPlist scripts/ExportOptions-AppStore.plist \
+		-exportPath $(BUILD_DIR)/AppStore \
+		-allowProvisioningUpdates
 
 clean:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIGURATION) -derivedDataPath $(BUILD_DIR) clean

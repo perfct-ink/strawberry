@@ -351,7 +351,9 @@ final class MenuController: NSObject, NSMenuDelegate {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         PanelHelper.activateApp()
-        return panel.runModal() == .OK ? panel.url : nil
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        SandboxAccess.shared.remember(url)
+        return url
     }
 
     // MARK: sync actions

@@ -25,6 +25,10 @@ final class AutoMediaSyncManager {
     func checkAndSyncForMountedVolume(_ volumeURL: URL) {
         guard let config = AutoMediaSyncStore.shared.config, config.isEnabled else { return }
         guard MediaOrganizer.canRunOnVolume(volume: volumeURL) else { return }
+        guard SandboxAccess.shared.ensureAccess(to: config.destinationURL.path) else {
+            log.error("Auto Media Sync skipped: no access to \(config.destinationURL.path); choose the destination again")
+            return
+        }
 
         let sourceURL = volumeURL.appendingPathComponent("DCIM", isDirectory: true)
 

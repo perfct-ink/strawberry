@@ -80,19 +80,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// (organize + copy, no prompt). Otherwise, for a card not already covered by
     /// a Sync Rule, offer the one-off "organize this card's photos" action.
     @objc func volumeDidMount(_ notification: Notification) {
-        guard let volumeURL = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL,
-              MediaOrganizer.canRunOnVolume(volume: volumeURL) else { return }
+        guard let volumeURL = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL else { return }
 
-        // Auto Media Sync handles configured cards on its own — organize + copy,
-        // no prompt.
-        AutoMediaSyncManager.shared.checkAndSyncForMountedVolume(volumeURL)
-        if AutoMediaSyncStore.shared.config?.isEnabled == true { return }
-
+        let autoSync = AutoMediaSyncStore.shared.config?.isEnabled == true
         // If a rule already covers this volume as its source, stay quiet.
         let covered = Store.shared.config.rules.contains {
             volumeURL.path == $0.source || $0.source.hasPrefix(volumeURL.path + "/")
         }
-        guard !covered else { return }
+        guard autoSync || !covered else { return }
+
+        // Sandboxed builds can't even look for a DCIM folder until the user has
+        // granted access to the card — ask once per removable volume.
+        if !SandboxAccess.shared.ensureAccess(to: volumeURL.path) {
+            let removable = (try? volumeURL.resourceValues(forKeys: [.volumeIsRemovableKey]))?.volumeIsRemovable ?? true
+            guard removable, PanelHelper.requestAccess(to: volumeURL) else { return }
+        }
+        guard MediaOrganizer.canRunOnVolume(volume: volumeURL) else { return }
+
+        // Auto Media Sync handles configured cards on its own — organize + copy,
+        // no prompt.
+        if autoSync {
+            AutoMediaSyncManager.shared.checkAndSyncForMountedVolume(volumeURL)
+            return
+        }
 
         let volumeName = volumeURL.lastPathComponent
         let alert = NSAlert()

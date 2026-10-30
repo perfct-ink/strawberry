@@ -46,10 +46,10 @@ final class LiveLogModel: ObservableObject {
         }
         ruleName = record.ruleName
         let url = Store.shared.logsDir.appendingPathComponent(name)
-        DispatchQueue.global(qos: .utility).async {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             let contents = (try? String(contentsOf: url, encoding: .utf8)) ?? "(log file could not be read: \(name))"
             let tail = String(contents.suffix(400_000))
-            DispatchQueue.main.async { [weak self] in self?.text = tail }
+            DispatchQueue.main.async { self?.text = tail }
         }
     }
 }

@@ -65,7 +65,9 @@ struct PreferencesView: View {
                         .font(.system(.callout, design: .monospaced))
                         .lineLimit(1).truncationMode(.middle)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button("Choose…") { model.chooseRsync() }
+                    if !SandboxAccess.isSandboxed {
+                        Button("Choose…") { model.chooseRsync() }
+                    }
                 }
                 Text("rsync \(RsyncCaps.get(model.rsyncPath).version)")
                     .font(.caption).foregroundStyle(.secondary)

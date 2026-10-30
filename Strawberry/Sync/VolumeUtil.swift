@@ -121,6 +121,14 @@ enum VolumeUtil {
     }
 
     static func availability(source: String, destination: String) -> Availability {
+        // Sandboxed (App Store) builds can only reach folders the user picked.
+        let access = SandboxAccess.shared
+        if !source.isEmpty, !access.ensureAccess(to: source) {
+            return .init(ok: false, reason: "source: no access — choose the folder again in the rule")
+        }
+        if !destination.isEmpty, !access.ensureAccess(to: destination) {
+            return .init(ok: false, reason: "destination: no access — choose the folder again in the rule")
+        }
         let s = sourceAvailable(source)
         guard s.ok else { return .init(ok: false, reason: "source: \(s.reason ?? "unavailable")") }
         let d = destinationAvailable(destination)

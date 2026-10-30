@@ -45,8 +45,11 @@ final class Store {
             history = []
         }
 
-        // Make sure we point at an rsync that actually exists.
-        if !fm.isExecutableFile(atPath: config.rsyncPath) {
+        // Make sure we point at an rsync that actually exists. The sandbox can
+        // only run the system copy.
+        if SandboxAccess.isSandboxed {
+            config.rsyncPath = "/usr/bin/rsync"
+        } else if !fm.isExecutableFile(atPath: config.rsyncPath) {
             for candidate in ["/opt/homebrew/bin/rsync", "/usr/local/bin/rsync", "/usr/bin/rsync"]
             where fm.isExecutableFile(atPath: candidate) {
                 config.rsyncPath = candidate

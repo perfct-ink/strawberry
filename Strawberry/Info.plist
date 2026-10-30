@@ -6,7 +6,7 @@
 	<string>This is used for reading inserted SD cards and other removable drives.</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

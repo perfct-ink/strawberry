@@ -49,7 +49,28 @@ enum PanelHelper {
             panel.directoryURL = URL(fileURLWithPath: start)
         }
         activateApp()
-        return panel.runModal() == .OK ? panel.url?.path : nil
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        SandboxAccess.shared.remember(url)
+        return url.path
+    }
+
+    /// Sandboxed builds only: ask the user to grant access to a just-mounted
+    /// volume by confirming it in an open panel. Remembered, so each volume is
+    /// asked about once. Returns whether the volume is now reachable.
+    static func requestAccess(to volume: URL) -> Bool {
+        let access = SandboxAccess.shared
+        if access.ensureAccess(to: volume.path) { return true }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = volume
+        panel.prompt = "Allow"
+        panel.message = "Allow Strawberry to organize and copy the photos on “\(volume.lastPathComponent)”? Select the drive and click Allow."
+        activateApp()
+        guard panel.runModal() == .OK, let url = panel.url else { return false }
+        access.remember(url)
+        return access.ensureAccess(to: volume.path)
     }
 
     static func chooseFile(title: String, start: String?) -> String? {
